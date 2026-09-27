@@ -182,6 +182,57 @@ const openapi = {
         },
       },
     },
+    "/zonas-comunes/{id}/bloqueos": {
+      get: {
+        summary: "Bloqueos por mantenimiento vigentes de una zona (solo ADMINISTRACION)",
+        parameters: [idParam],
+        responses: { "200": { description: "Bloqueos" }, "404": { description: "ZONA_NO_ENCONTRADA" }, ...errorResponses },
+      },
+      post: {
+        summary: "Bloquear una zona por mantenimiento; cancela en bloque las reservas afectadas si se confirma (solo ADMINISTRACION)",
+        parameters: [idParam],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["inicio", "fin", "motivo"],
+                properties: {
+                  inicio: { type: "string", example: "2026-10-10T00:00" },
+                  fin: { type: "string", example: "2026-10-16T00:00" },
+                  motivo: { type: "string" },
+                  cancelarReservasAfectadas: { type: "boolean", default: false },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "201": { description: "{ bloqueo, reservasCanceladas }" },
+          "409": { description: "RESERVAS_AFECTADAS con details.reservas: confirmar con cancelarReservasAfectadas=true" },
+          "422": { description: "RANGO_INVALIDO" },
+          ...errorResponses,
+        },
+      },
+    },
+    "/zonas-comunes/{id}/bloqueos/reservas-afectadas": {
+      get: {
+        summary: "Reservas confirmadas dentro de un rango, antes de bloquear (solo ADMINISTRACION)",
+        parameters: [
+          idParam,
+          { name: "inicio", in: "query", required: true, schema: { type: "string", example: "2026-10-10T00:00" } },
+          { name: "fin", in: "query", required: true, schema: { type: "string", example: "2026-10-16T00:00" } },
+        ],
+        responses: { "200": { description: "Reservas afectadas" }, ...errorResponses },
+      },
+    },
+    "/zonas-comunes/{id}/bloqueos/{bloqueoId}": {
+      delete: {
+        summary: "Eliminar un bloqueo; no restablece reservas canceladas (solo ADMINISTRACION)",
+        parameters: [idParam, { name: "bloqueoId", in: "path", required: true, schema: { type: "integer" } }],
+        responses: { "204": { description: "Eliminado" }, "404": { description: "BLOQUEO_NO_ENCONTRADO" }, ...errorResponses },
+      },
+    },
     "/zonas-comunes/{id}/activacion": {
       patch: {
         summary: "Activar o desactivar una zona (solo ADMINISTRACION); devuelve las reservas futuras que se conservan",

@@ -74,6 +74,10 @@ Todas las rutas viven bajo `/api/v1`, exigen sesion y, en mutaciones, CSRF. Resp
 | POST | `/zonas-comunes` | ADMINISTRACION | 422 `FRANJA_INCOMPLETA` si la duracion no cabe exacta: repetir con `confirmarFranjaIncompleta: true` |
 | PUT | `/zonas-comunes/{id}` | ADMINISTRACION | 409 si cambia el horario con reservas futuras o si el aforo queda por debajo de lo ya reservado |
 | PATCH | `/zonas-comunes/{id}/activacion` | ADMINISTRACION | `{ activa }`. Devuelve `{ zona, reservasFuturas }`: las reservas se conservan |
+| GET | `/zonas-comunes/{id}/bloqueos` | ADMINISTRACION | Bloqueos vigentes de la zona (HU-3.7) |
+| GET | `/zonas-comunes/{id}/bloqueos/reservas-afectadas?inicio=&fin=` | ADMINISTRACION | Vista previa de las reservas confirmadas dentro del rango |
+| POST | `/zonas-comunes/{id}/bloqueos` | ADMINISTRACION | `{ inicio, fin, motivo, cancelarReservasAfectadas }` con fechas `YYYY-MM-DDTHH:MM` en hora local. Con reservas afectadas y sin confirmar responde `409 RESERVAS_AFECTADAS` con la lista; al confirmar, crea el bloqueo y cancela todas en una sola transaccion |
+| DELETE | `/zonas-comunes/{id}/bloqueos/{bloqueoId}` | ADMINISTRACION | Eliminacion logica: las franjas vuelven a estar disponibles, las reservas canceladas no se restablecen |
 | GET | `/zonas-comunes/{id}/disponibilidad?desde=&hasta=` | cualquiera | Fechas `YYYY-MM-DD`, por defecto hoy y 7 dias. Maximo 60 dias (422 `RANGO_DEMASIADO_AMPLIO`) |
 
 ### Reservas (HU-3.3)

@@ -115,6 +115,22 @@ class ReservaRepository {
     });
   }
 
+  public static async findConfirmadasFuturasEnRango(
+    trx: Knex | Knex.Transaction,
+    zonaId: number,
+    inicio: Date,
+    fin: Date,
+    ahora: Date,
+  ): Promise<ReservaRow[]> {
+    return conZona(trx)
+      .where("r.zona_id", zonaId)
+      .andWhere("r.estado", "CONFIRMADA")
+      .andWhere("r.inicio", "<", fin)
+      .andWhere("r.fin", ">", inicio)
+      .andWhere("r.inicio", ">", ahora)
+      .orderBy("r.inicio");
+  }
+
   public static async findDelApartamento(apartamentoId: number): Promise<ReservaRow[]> {
     return conZona(knex).where("r.apartamento_id", apartamentoId).orderBy("r.inicio", "asc");
   }
