@@ -1,0 +1,35 @@
+### Build ###
+HELP.md
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### Environment ###
+.env
+.env.local
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+
+### Eclipse / STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+### VS Code ###
+.vscode/
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Tooling ###
+.mcp.json
+.claude/
