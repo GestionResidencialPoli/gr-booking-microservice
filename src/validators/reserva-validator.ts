@@ -6,7 +6,13 @@ export const crearReservaSchema = z.object({
   horaInicio: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "La hora debe tener el formato HH:MM."),
 });
 
+export const idSchema = z.coerce.number().int().positive();
+
 class ReservaValidator {
+  public static id(input: unknown) {
+    return idSchema.parse(input);
+  }
+
   public static crear(input: unknown) {
     return crearReservaSchema.parse(input);
   }

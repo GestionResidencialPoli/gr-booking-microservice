@@ -1,6 +1,6 @@
 import type { Knex } from "knex";
 import knex from "../db/knex";
-import type { ReservaRow } from "../types/components/reserva";
+import type { ReservaRow, TipoCancelacion } from "../types/components/reserva";
 
 const TABLE = "reservas";
 
@@ -8,6 +8,12 @@ function conZona(trx: Knex | Knex.Transaction) {
   return trx<ReservaRow>(`${TABLE} as r`)
     .join("zonas_comunes as z", "z.id", "r.zona_id")
     .select("r.*", "z.nombre as zona_nombre");
+}
+
+export interface Cancelacion {
+  porUserId: number;
+  tipo: TipoCancelacion;
+  motivo: string | null;
 }
 
 export interface NuevaReserva {
@@ -63,6 +69,20 @@ class ReservaRepository {
       .andWhere("inicio", ">", trx.fn.now())
       .first("id");
     return Boolean(fila);
+  }
+
+  public static async findByIdForUpdate(trx: Knex.Transaction, id: number): Promise<ReservaRow | undefined> {
+    return trx<ReservaRow>(TABLE).where("id", id).forUpdate().first();
+  }
+
+  public static async cancelar(trx: Knex.Transaction, id: number, cancelacion: Cancelacion): Promise<void> {
+    await trx(TABLE).where("id", id).update({
+      estado: "CANCELADA",
+      cancelada_en: trx.fn.now(),
+      cancelada_por_user_id: cancelacion.porUserId,
+      cancelacion_tipo: cancelacion.tipo,
+      cancelacion_motivo: cancelacion.motivo,
+    });
   }
 
   public static async findById(id: number, trx: Knex | Knex.Transaction = knex): Promise<ReservaRow | undefined> {
