@@ -81,6 +81,7 @@ Todas las rutas viven bajo `/api/v1`, exigen sesion y, en mutaciones, CSRF. Resp
 | Metodo | Ruta | Rol | Notas |
 |---|---|---|---|
 | POST | `/reservas` | RESIDENTE | `{ zonaId, fecha: "YYYY-MM-DD", horaInicio: "HH:MM" }` → `201` con la reserva |
+| PATCH | `/reservas/{id}/cancelacion` | RESIDENTE | Cancela una reserva del propio apartamento (HU-3.4). Idempotente: cancelar dos veces no produce error ni libera el cupo dos veces |
 
 La reserva pertenece al **apartamento**, no a la persona. Codigos de error diferenciados a proposito:
 
@@ -89,6 +90,10 @@ La reserva pertenece al **apartamento**, no a la persona. Codigos de error difer
 - `422` por regla de negocio, sin sentido reintentar: `ZONA_INACTIVA`, `FRANJA_BLOQUEADA`, `FRANJA_PASADA`,
   `ANTICIPACION_MINIMA`, `ANTICIPACION_MAXIMA`, `LIMITE_RESERVAS_ACTIVAS`, `SIN_PAZ_Y_SALVO`, `FRANJA_INVALIDA`,
   `SIN_APARTAMENTO`, `APARTAMENTO_INACTIVO`.
+
+Cancelar es una transicion a `CANCELADA` (nunca un borrado) que libera el cupo de la franja en la misma
+transaccion. Errores: `403 RESERVA_AJENA` (otro apartamento), `422 RESERVA_PASADA`,
+`422 ANTICIPACION_CANCELACION` (con `details.anticipacionCancelacionHoras`), `404 RESERVA_NO_ENCONTRADA`.
 
 La disponibilidad devuelve `{ zonaId, desde, hasta, consultadaEn, dias: [{ fecha, franjas: [{ inicio, fin,
 horaInicio, horaFin, estado, aforo, cuposRestantes, motivoBloqueo }] }] }`, con `estado` en `DISPONIBLE`,

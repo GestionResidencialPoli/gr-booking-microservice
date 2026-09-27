@@ -137,6 +137,18 @@ const openapi = {
         },
       },
     },
+    "/reservas/{id}/cancelacion": {
+      patch: {
+        summary: "Cancelar una reserva del propio apartamento (solo RESIDENTE); idempotente",
+        parameters: [idParam],
+        responses: {
+          "200": { description: "Reserva en estado CANCELADA" },
+          "403": { description: "RESERVA_AJENA" },
+          "404": { description: "RESERVA_NO_ENCONTRADA" },
+          "422": { description: "RESERVA_PASADA o ANTICIPACION_CANCELACION" },
+        },
+      },
+    },
     "/zonas-comunes/{id}/activacion": {
       patch: {
         summary: "Activar o desactivar una zona (solo ADMINISTRACION); devuelve las reservas futuras que se conservan",
