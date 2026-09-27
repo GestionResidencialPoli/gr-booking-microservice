@@ -137,6 +137,12 @@ const openapi = {
         },
       },
     },
+    "/reservas/mias": {
+      get: {
+        summary: "Reservas del apartamento del residente, separadas en proximas y pasadas (solo RESIDENTE)",
+        responses: { "200": { description: "{ apartamento, proximas, pasadas }" }, "422": { description: "SIN_APARTAMENTO o APARTAMENTO_INACTIVO" } },
+      },
+    },
     "/reservas/{id}/cancelacion": {
       patch: {
         summary: "Cancelar una reserva del propio apartamento (solo RESIDENTE); idempotente",

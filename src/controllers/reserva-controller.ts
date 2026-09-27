@@ -16,6 +16,14 @@ class ReservaController {
     }
   }
 
+  public static async listMine(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      BaseController.handleSuccess(res, { payload: await ReservaService.misReservas(Session.of(req).uid) });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   public static async cancelOwn(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const reserva = await CancelacionService.cancelarPropia(Session.of(req).uid, ReservaValidator.id(req.params.id));
