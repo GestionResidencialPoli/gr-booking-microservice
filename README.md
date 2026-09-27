@@ -47,10 +47,19 @@ verifica localmente con el mismo `JWT_SECRET`. Las mutaciones exigen ademas el e
 mismo valor de la cookie `XSRF-TOKEN` (doble envio, igual contrato que el user-microservice). Los errores tienen
 la forma `{ "error": { "code", "message", "details?" } }`.
 
-## Eventos (RabbitMQ)
+## Comunicacion con otros servicios
 
-Publica en el exchange `topic` durable `gr.booking.events`. Si RabbitMQ no esta disponible, la operacion de
-negocio no falla: el evento se registra como advertencia en el log.
+- **RabbitMQ, publicacion**: exchange `topic` durable `gr.booking.events` con `zona.*` y `reserva.creada`. Si
+  RabbitMQ no esta disponible la operacion de negocio no falla; el evento queda como advertencia en el log.
+- **RabbitMQ, consumo (paz y salvo replicado)**: la cola durable `gr-booking.estado-cartera` escucha
+  `cartera.estado-actualizado` en `gr.finance.events` (`{ apartamentoId, saldoVencido, occurredAt }`) y lo
+  replica en la tabla `estado_cartera`. Solo aplica un evento si es mas reciente que el ultimo, asi que llegar
+  desordenado o repetido no corrompe la replica. Mientras el modulo financiero no publique nada, ningun
+  apartamento tiene registro y todos se consideran a paz y salvo. La cola es compartida entre replicas: cada
+  evento lo procesa una sola.
+- **HTTP interno**: `GET /api/v1/internal/users/{id}` de gr-user-microservice (con `X-Internal-Token`) para
+  saber el apartamento del residente que reserva. Si no responde, la reserva devuelve `502
+  DIRECTORIO_NO_DISPONIBLE` y no se escribe nada.
 
 ## Endpoints
 
@@ -66,6 +75,20 @@ Todas las rutas viven bajo `/api/v1`, exigen sesion y, en mutaciones, CSRF. Resp
 | PUT | `/zonas-comunes/{id}` | ADMINISTRACION | 409 si cambia el horario con reservas futuras o si el aforo queda por debajo de lo ya reservado |
 | PATCH | `/zonas-comunes/{id}/activacion` | ADMINISTRACION | `{ activa }`. Devuelve `{ zona, reservasFuturas }`: las reservas se conservan |
 | GET | `/zonas-comunes/{id}/disponibilidad?desde=&hasta=` | cualquiera | Fechas `YYYY-MM-DD`, por defecto hoy y 7 dias. Maximo 60 dias (422 `RANGO_DEMASIADO_AMPLIO`) |
+
+### Reservas (HU-3.3)
+
+| Metodo | Ruta | Rol | Notas |
+|---|---|---|---|
+| POST | `/reservas` | RESIDENTE | `{ zonaId, fecha: "YYYY-MM-DD", horaInicio: "HH:MM" }` → `201` con la reserva |
+
+La reserva pertenece al **apartamento**, no a la persona. Codigos de error diferenciados a proposito:
+
+- `409 FRANJA_SIN_CUPO`: conflicto de concurrencia, la franja acaba de ser tomada. Tiene sentido refrescar la
+  disponibilidad y elegir otra.
+- `422` por regla de negocio, sin sentido reintentar: `ZONA_INACTIVA`, `FRANJA_BLOQUEADA`, `FRANJA_PASADA`,
+  `ANTICIPACION_MINIMA`, `ANTICIPACION_MAXIMA`, `LIMITE_RESERVAS_ACTIVAS`, `SIN_PAZ_Y_SALVO`, `FRANJA_INVALIDA`,
+  `SIN_APARTAMENTO`, `APARTAMENTO_INACTIVO`.
 
 La disponibilidad devuelve `{ zonaId, desde, hasta, consultadaEn, dias: [{ fecha, franjas: [{ inicio, fin,
 horaInicio, horaFin, estado, aforo, cuposRestantes, motivoBloqueo }] }] }`, con `estado` en `DISPONIBLE`,
@@ -90,6 +113,12 @@ cierre.
 | `DB_POOL_MAX` | Conexiones maximas del pool | `10` |
 | `RABBITMQ_URL` | Broker de eventos | `amqp://localhost:5672` |
 | `BOOKING_EVENTS_EXCHANGE` | Exchange de eventos del servicio | `gr.booking.events` |
+| `FINANCE_EVENTS_EXCHANGE` | Exchange del modulo financiero del que se replica el paz y salvo | `gr.finance.events` |
+| `CARTERA_QUEUE` | Cola durable (compartida entre replicas) que consume el estado de cartera | `gr-booking.estado-cartera` |
+| `USER_SERVICE_URL` | gr-user-microservice, para resolver el apartamento del residente | `http://localhost:8080` |
+| `INTERNAL_SERVICE_TOKEN` | Token servicio a servicio (obligatorio, mismo valor que en gr-user-microservice) | — |
+| `USER_SERVICE_TIMEOUT_MS` | Tiempo maximo de la consulta al user-microservice | `3000` |
+| `MAX_RESERVAS_ACTIVAS_POR_APARTAMENTO` | Reservas futuras confirmadas permitidas por apartamento | `2` |
 | `TIMEZONE_OFFSET` | Desfase de la hora local de la copropiedad (Colombia no tiene horario de verano) | `-05:00` |
 | `RATE_LIMIT_WINDOW_MS` / `RATE_LIMIT_MAX` | Limite de solicitudes por IP | `60000` / `300` |
 

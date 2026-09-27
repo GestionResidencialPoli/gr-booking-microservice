@@ -14,6 +14,7 @@ export default defineConfig({
       JWT_SECRET: "test-jwt-secret-de-al-menos-32-caracteres",
       INTERNAL_SERVICE_TOKEN: "test-internal-service-token-de-32-caracteres",
       RABBITMQ_URL: "amqp://127.0.0.1:1",
+      USER_SERVICE_URL: "http://127.0.0.1:47123",
       RATE_LIMIT_MAX: "100000",
     },
   },

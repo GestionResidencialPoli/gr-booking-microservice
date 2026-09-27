@@ -106,6 +106,37 @@ const openapi = {
         },
       },
     },
+    "/reservas": {
+      post: {
+        summary: "Reservar una franja de una zona comun (solo RESIDENTE); la reserva pertenece al apartamento",
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["zonaId", "fecha", "horaInicio"],
+                properties: {
+                  zonaId: { type: "integer" },
+                  fecha: { type: "string", format: "date", example: "2026-10-10" },
+                  horaInicio: { type: "string", example: "08:00" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "201": { description: "Reserva confirmada" },
+          "404": { description: "ZONA_NO_ENCONTRADA" },
+          "409": { description: "FRANJA_SIN_CUPO: la franja acaba de ser tomada; refrescar la disponibilidad" },
+          "422": {
+            description:
+              "Regla incumplida: ZONA_INACTIVA, FRANJA_BLOQUEADA, FRANJA_PASADA, ANTICIPACION_MINIMA, ANTICIPACION_MAXIMA, LIMITE_RESERVAS_ACTIVAS, SIN_PAZ_Y_SALVO, FRANJA_INVALIDA, SIN_APARTAMENTO, APARTAMENTO_INACTIVO",
+          },
+          "502": { description: "DIRECTORIO_NO_DISPONIBLE: gr-user-microservice no respondio" },
+          ...errorResponses,
+        },
+      },
+    },
     "/zonas-comunes/{id}/activacion": {
       patch: {
         summary: "Activar o desactivar una zona (solo ADMINISTRACION); devuelve las reservas futuras que se conservan",
