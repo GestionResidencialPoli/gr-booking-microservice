@@ -5,7 +5,7 @@ import Calendario from "../lib/calendario";
 import DomainError from "../lib/domain-error";
 import Errores from "../lib/errores";
 import Logger from "../lib/logger";
-import PgErrors, { PG_CHECK_VIOLATION, PG_EXCLUSION_VIOLATION } from "../lib/pg-errors";
+import PgErrors, { PG_CHECK_VIOLATION, PG_DEADLOCK_DETECTED, PG_EXCLUSION_VIOLATION } from "../lib/pg-errors";
 import type { Residente } from "../lib/user-service-client";
 import BloqueoRepository from "../repositories/bloqueo-repository";
 import FranjaRepository from "../repositories/franja-repository";
@@ -53,7 +53,11 @@ class RegistroReservas {
     try {
       return await knex.transaction((trx) => RegistroReservas.seccionCritica(trx, solicitud, residente, apartamento, ahora));
     } catch (error) {
-      if (PgErrors.es(error, PG_EXCLUSION_VIOLATION) || PgErrors.es(error, PG_CHECK_VIOLATION, "ck_franjas_ocupados")) {
+      if (
+        PgErrors.es(error, PG_EXCLUSION_VIOLATION) ||
+        PgErrors.es(error, PG_DEADLOCK_DETECTED) ||
+        PgErrors.es(error, PG_CHECK_VIOLATION, "ck_franjas_ocupados")
+      ) {
         RegistroReservas.registrarConflicto(solicitud, "restriccion de base de datos");
         throw franjaSinCupo();
       }

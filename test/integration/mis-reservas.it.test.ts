@@ -7,7 +7,7 @@ import { crearZona, fechaEn, reservar } from "./support/reservas";
 import { residente } from "./support/session";
 import { apartamentoIdDe } from "./support/user-service-stub";
 
-const app = server.app;
+const app = server.httpServer;
 
 interface ReservaRespuesta {
   id: number;

@@ -5,7 +5,7 @@ import server from "../../../src/server";
 import { zonaPayload } from "./datos";
 import { administrador, residente } from "./session";
 
-const app = server.app;
+const app = server.httpServer;
 const admin = administrador();
 
 export function fechaEn(dias: number): string {

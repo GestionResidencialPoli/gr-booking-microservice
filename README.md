@@ -148,6 +148,13 @@ pnpm dev
 Documentacion OpenAPI en `/api-docs` fuera de produccion. Salud: `GET /health` (proceso vivo) y
 `GET /health/ready` (base de datos disponible).
 
+## Concurrencia
+
+La decision de como se evita la doble reserva, con la comparacion medida de las alternativas (mutex en memoria,
+bloqueo pesimista, restriccion de exclusion y contador atomico) y la evidencia con dos replicas, esta en
+`docs/decisiones/ADR-003-concurrencia-reservas.md`. La suite que la sostiene es
+`test/integration/concurrencia-reservas.it.test.ts`.
+
 ## Pruebas
 
 ```bash

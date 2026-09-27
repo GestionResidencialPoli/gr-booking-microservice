@@ -25,6 +25,8 @@ ser tomada y volver a pedir la disponibilidad.
 
 ## Seccion critica de la reserva
 
+La decision y sus mediciones estan en `docs/decisiones/ADR-003-concurrencia-reservas.md`.
+
 `RegistroReservas` ejecuta todo en **una sola transaccion** de PostgreSQL, que es el unico componente compartido
 por todas las replicas:
 

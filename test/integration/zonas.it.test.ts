@@ -5,7 +5,7 @@ import server from "../../src/server";
 import { enDias, insertarReservaConfirmada, zonaPayload } from "./support/datos";
 import { administrador, residente, type TestSession } from "./support/session";
 
-const app = server.app;
+const app = server.httpServer;
 const admin = administrador();
 
 function crear(session: TestSession, body: Record<string, unknown>) {

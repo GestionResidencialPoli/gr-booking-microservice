@@ -7,7 +7,7 @@ import { crearZona, fechaEn, reservar } from "./support/reservas";
 import { vigilante } from "./support/session";
 import { UID_APARTAMENTO_INACTIVO, UID_SIN_APARTAMENTO, apartamentoIdDe } from "./support/user-service-stub";
 
-const app = server.app;
+const app = server.httpServer;
 
 async function reservasConfirmadas(zonaId: number): Promise<number> {
   const [fila] = await knex("reservas").where({ zona_id: zonaId, estado: "CONFIRMADA" }).count<{ count: string }[]>({ count: "*" });
