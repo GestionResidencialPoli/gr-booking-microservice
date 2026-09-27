@@ -85,6 +85,10 @@ class ReservaRepository {
     });
   }
 
+  public static async findDelApartamento(apartamentoId: number): Promise<ReservaRow[]> {
+    return conZona(knex).where("r.apartamento_id", apartamentoId).orderBy("r.inicio", "asc");
+  }
+
   public static async findById(id: number, trx: Knex | Knex.Transaction = knex): Promise<ReservaRow | undefined> {
     return conZona(trx).where("r.id", id).first();
   }

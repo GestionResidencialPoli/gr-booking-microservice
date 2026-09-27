@@ -6,6 +6,7 @@ function reservaRouter(): Router {
   const router = Router();
   const requireResidente = requireRoles("RESIDENTE");
 
+  router.get("/mias", requireResidente, ReservaController.listMine);
   router.post("/", requireResidente, ReservaController.create);
   router.patch("/:id/cancelacion", requireResidente, ReservaController.cancelOwn);
 
