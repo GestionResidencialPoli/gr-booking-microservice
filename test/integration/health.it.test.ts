@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import server from "../../src/server";
 import { residente } from "./support/session";
 
-const app = server.app;
+const app = server.httpServer;
 
 describe("esqueleto del servicio", () => {
   it("responde /health sin sesion", async () => {

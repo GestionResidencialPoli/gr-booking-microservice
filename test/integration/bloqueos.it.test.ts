@@ -5,7 +5,7 @@ import server from "../../src/server";
 import { crearZona, fechaEn, reservar } from "./support/reservas";
 import { administrador, residente } from "./support/session";
 
-const app = server.app;
+const app = server.httpServer;
 const admin = administrador(970);
 
 function bloquear(zonaId: number, body: Record<string, unknown>, session = admin) {

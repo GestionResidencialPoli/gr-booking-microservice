@@ -6,7 +6,7 @@ import server from "../../src/server";
 import { insertarReservaConfirmada, zonaPayload } from "./support/datos";
 import { administrador, residente } from "./support/session";
 
-const app = server.app;
+const app = server.httpServer;
 const admin = administrador();
 const vecino = residente(10);
 
