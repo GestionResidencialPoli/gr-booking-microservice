@@ -25,7 +25,37 @@ export interface NuevaReserva {
   exclusiva: boolean;
 }
 
+export interface FiltroReservas {
+  zonaId?: number;
+  desde?: Date;
+  hasta?: Date;
+  estado?: "CONFIRMADA" | "CANCELADA";
+  page: number;
+  size: number;
+}
+
 class ReservaRepository {
+  public static async findPage(filtro: FiltroReservas): Promise<{ rows: ReservaRow[]; total: number }> {
+    const filtrada = () => {
+      const query = knex(`${TABLE} as r`).join("zonas_comunes as z", "z.id", "r.zona_id");
+      if (filtro.zonaId) query.where("r.zona_id", filtro.zonaId);
+      if (filtro.desde) query.andWhere("r.inicio", ">=", filtro.desde);
+      if (filtro.hasta) query.andWhere("r.inicio", "<", filtro.hasta);
+      if (filtro.estado) query.andWhere("r.estado", filtro.estado);
+      return query;
+    };
+
+    const [rows, conteo] = await Promise.all([
+      filtrada()
+        .select("r.*", "z.nombre as zona_nombre")
+        .orderBy([{ column: "r.inicio", order: "desc" }, { column: "r.id", order: "desc" }])
+        .offset(filtro.page * filtro.size)
+        .limit(filtro.size),
+      filtrada().count<{ count: string }[]>({ count: "*" }),
+    ]);
+    return { rows: rows as ReservaRow[], total: Number(conteo[0]?.count ?? 0) };
+  }
+
   public static async insert(trx: Knex.Transaction, reserva: NuevaReserva): Promise<number> {
     const [fila] = await trx(TABLE)
       .insert({
