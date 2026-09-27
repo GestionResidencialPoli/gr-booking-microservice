@@ -82,6 +82,8 @@ Todas las rutas viven bajo `/api/v1`, exigen sesion y, en mutaciones, CSRF. Resp
 |---|---|---|---|
 | POST | `/reservas` | RESIDENTE | `{ zonaId, fecha: "YYYY-MM-DD", horaInicio: "HH:MM" }` → `201` con la reserva |
 | GET | `/reservas/mias` | RESIDENTE | Reservas del apartamento (HU-3.5): `{ apartamento, proximas, pasadas }`. Proximas en orden ascendente; pasadas de la mas reciente a la mas antigua (maximo 50). Incluye las canceladas con su estado |
+| GET | `/reservas?zonaId=&desde=&hasta=&estado=&page=&size=` | ADMINISTRACION | Listado global paginado (HU-3.6), con apartamento y residente de cada reserva |
+| PATCH | `/reservas/{id}/cancelacion-administrativa` | ADMINISTRACION | `{ motivo }` obligatorio. No aplica la anticipacion de cancelacion del residente; deja constancia del administrador y del motivo |
 | PATCH | `/reservas/{id}/cancelacion` | RESIDENTE | Cancela una reserva del propio apartamento (HU-3.4). Idempotente: cancelar dos veces no produce error ni libera el cupo dos veces |
 
 La reserva pertenece al **apartamento**, no a la persona. Codigos de error diferenciados a proposito:

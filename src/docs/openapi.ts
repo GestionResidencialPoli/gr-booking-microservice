@@ -107,6 +107,18 @@ const openapi = {
       },
     },
     "/reservas": {
+      get: {
+        summary: "Listado global de reservas con filtros (solo ADMINISTRACION)",
+        parameters: [
+          { name: "zonaId", in: "query", schema: { type: "integer" } },
+          { name: "desde", in: "query", schema: { type: "string", format: "date" } },
+          { name: "hasta", in: "query", schema: { type: "string", format: "date" } },
+          { name: "estado", in: "query", schema: { type: "string", enum: ["CONFIRMADA", "CANCELADA"] } },
+          { name: "page", in: "query", schema: { type: "integer", default: 0 } },
+          { name: "size", in: "query", schema: { type: "integer", default: 20 } },
+        ],
+        responses: { "200": { description: "{ content, page, size, totalElements, totalPages }" }, ...errorResponses },
+      },
       post: {
         summary: "Reservar una franja de una zona comun (solo RESIDENTE); la reserva pertenece al apartamento",
         requestBody: {
@@ -133,6 +145,21 @@ const openapi = {
               "Regla incumplida: ZONA_INACTIVA, FRANJA_BLOQUEADA, FRANJA_PASADA, ANTICIPACION_MINIMA, ANTICIPACION_MAXIMA, LIMITE_RESERVAS_ACTIVAS, SIN_PAZ_Y_SALVO, FRANJA_INVALIDA, SIN_APARTAMENTO, APARTAMENTO_INACTIVO",
           },
           "502": { description: "DIRECTORIO_NO_DISPONIBLE: gr-user-microservice no respondio" },
+          ...errorResponses,
+        },
+      },
+    },
+    "/reservas/{id}/cancelacion-administrativa": {
+      patch: {
+        summary: "Cancelar cualquier reserva con motivo obligatorio (solo ADMINISTRACION)",
+        parameters: [idParam],
+        requestBody: {
+          content: { "application/json": { schema: { type: "object", required: ["motivo"], properties: { motivo: { type: "string" } } } } },
+        },
+        responses: {
+          "200": { description: "Reserva CANCELADA con cancelacion.tipo ADMINISTRACION, responsable y motivo" },
+          "404": { description: "RESERVA_NO_ENCONTRADA" },
+          "422": { description: "RESERVA_PASADA" },
           ...errorResponses,
         },
       },
