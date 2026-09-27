@@ -23,6 +23,7 @@
     "src/**/*",
     "knexfile.ts",
     "migrations/**/*",
+    "seeds/**/*",
     "scripts/**/*",
     "test/**/*"
   ],

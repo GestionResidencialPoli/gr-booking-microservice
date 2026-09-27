@@ -52,6 +52,24 @@ la forma `{ "error": { "code", "message", "details?" } }`.
 Publica en el exchange `topic` durable `gr.booking.events`. Si RabbitMQ no esta disponible, la operacion de
 negocio no falla: el evento se registra como advertencia en el log.
 
+## Endpoints
+
+Todas las rutas viven bajo `/api/v1`, exigen sesion y, en mutaciones, CSRF. Respuesta exitosa: `{ payload }`.
+
+### Zonas comunes (HU-3.1)
+
+| Metodo | Ruta | Rol | Notas |
+|---|---|---|---|
+| GET | `/zonas-comunes?incluirInactivas=` | cualquiera | Residentes solo ven zonas activas |
+| GET | `/zonas-comunes/{id}` | cualquiera | 404 `ZONA_NO_ENCONTRADA` si no existe o esta inactiva para un residente |
+| POST | `/zonas-comunes` | ADMINISTRACION | 422 `FRANJA_INCOMPLETA` si la duracion no cabe exacta: repetir con `confirmarFranjaIncompleta: true` |
+| PUT | `/zonas-comunes/{id}` | ADMINISTRACION | 409 si cambia el horario con reservas futuras o si el aforo queda por debajo de lo ya reservado |
+| PATCH | `/zonas-comunes/{id}/activacion` | ADMINISTRACION | `{ activa }`. Devuelve `{ zona, reservasFuturas }`: las reservas se conservan |
+
+Las horas de las zonas se interpretan en hora de Colombia (`TIMEZONE_OFFSET`) y las franjas se derivan de la
+apertura, el cierre y la duracion; si la duracion no cabe un numero entero de veces, la ultima franja termina al
+cierre.
+
 ## Variables de entorno
 
 | Variable | Descripcion | Valor por defecto |
@@ -66,6 +84,7 @@ negocio no falla: el evento se registra como advertencia en el log.
 | `DB_POOL_MAX` | Conexiones maximas del pool | `10` |
 | `RABBITMQ_URL` | Broker de eventos | `amqp://localhost:5672` |
 | `BOOKING_EVENTS_EXCHANGE` | Exchange de eventos del servicio | `gr.booking.events` |
+| `TIMEZONE_OFFSET` | Desfase de la hora local de la copropiedad (Colombia no tiene horario de verano) | `-05:00` |
 | `RATE_LIMIT_WINDOW_MS` / `RATE_LIMIT_MAX` | Limite de solicitudes por IP | `60000` / `300` |
 
 ## Desarrollo
@@ -75,6 +94,7 @@ pnpm install
 cp .env.example .env
 pnpm db:ensure
 pnpm migrate:latest
+pnpm seed:run     # zonas de ejemplo: Salon Social, Piscina, Cancha Multiple y Zona BBQ
 pnpm dev
 ```
 

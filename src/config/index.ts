@@ -43,6 +43,9 @@ const config = {
     url: process.env.RABBITMQ_URL ?? "amqp://localhost:5672",
     eventsExchange: process.env.BOOKING_EVENTS_EXCHANGE ?? "gr.booking.events",
   },
+  zonaHoraria: {
+    offset: process.env.TIMEZONE_OFFSET ?? "-05:00",
+  },
   rateLimit: {
     windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS ?? 60_000),
     max: Number(process.env.RATE_LIMIT_MAX ?? 300),
