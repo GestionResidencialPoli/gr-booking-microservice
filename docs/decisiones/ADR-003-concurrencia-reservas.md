@@ -96,8 +96,11 @@ proceso. Las cifras absolutas varian por maquina; las conclusiones de correctitu
    luego el `INSERT` de la reserva. Si el `UPDATE` no afecta ninguna fila, la franja no tiene cupo: `409`.
 3. La condicion y la escritura son **una sola operacion del motor**. En `READ COMMITTED`, un segundo `UPDATE`
    sobre la misma fila espera al primero y reevalua `ocupados < aforo` con el valor ya confirmado.
-4. El bloqueo de fila es **por franja**: franjas distintas no se esperan entre si (100 solicitudes sobre franjas
-   distintas tardaron 80 ms, frente a 429 ms si fueran secuenciales).
+4. El bloqueo de fila es **por franja**: franjas distintas no se esperan entre si. Una prueba determinista lo
+   demuestra: con una transaccion abierta que retiene el cupo de una franja, la reserva de otra franja termina de
+   inmediato y la de la misma franja queda esperando hasta que la primera termina. En la medicion, 100 solicitudes
+   sobre franjas distintas tardaron 80 ms, frente a 429 ms si fueran secuenciales, en la maquina descrita. En el
+   runner de CI de 2 vCPU la ganancia es menor, pero el tiempo sigue siendo sublineal.
 5. Ultima linea de defensa: `ex_reservas_exclusivas_sin_solapamiento` (exclusion GiST para aforo 1) y el `CHECK`
    del contador rechazan cualquier escritura invalida, incluso por SQL directo o desde una carga masiva. Una
    violacion de cualquiera de las dos, o un deadlock detectado por el motor (`40P01`), se traduce a `409`, nunca a

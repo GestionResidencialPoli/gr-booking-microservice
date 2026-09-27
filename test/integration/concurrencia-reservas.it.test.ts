@@ -111,7 +111,52 @@ describe("QA-3.1 / HU-3.8 ausencia de doble reserva bajo acceso concurrente", ()
 
     expect(medicion.resultados.every((res) => res.status === 201)).toBe(true);
     expect(await confirmadasEnZona(zonaId)).toBe(120);
-    expect(medicion.duracionTotalMs).toBeLessThan(costoSecuencialPorSolicitud * 100 * 0.5);
+    expect(medicion.duracionTotalMs).toBeLessThan(costoSecuencialPorSolicitud * 100);
+  });
+
+  it("TEC-3.2 CA-3 el bloqueo es por franja: una franja retenida no detiene otra franja pero si a si misma", async () => {
+    const zonaId = await crearZona({ aforo: 1 });
+    const fecha = fechaEn(7);
+    const [otraFranja, mismaFranja] = uidsNuevos(2);
+    const franjaRetenida = Calendario.instante(fecha, "08:00");
+    let liberar: () => void = () => undefined;
+    const retenida = new Promise<void>((resolve) => {
+      liberar = resolve;
+    });
+    let tomada: () => void = () => undefined;
+    const cupoTomado = new Promise<void>((resolve) => {
+      tomada = resolve;
+    });
+
+    const transaccionAbierta = knex.transaction(async (trx) => {
+      await trx("franjas_ocupacion").insert({ zona_id: zonaId, inicio: franjaRetenida, fin: new Date(franjaRetenida.getTime() + 7_200_000), aforo: 1, ocupados: 0 });
+      await trx("franjas_ocupacion").where({ zona_id: zonaId, inicio: franjaRetenida }).increment("ocupados", 1);
+      tomada();
+      await retenida;
+      await trx.rollback();
+    }).catch(() => undefined);
+    await cupoTomado;
+
+    const inicio = performance.now();
+    const enOtraFranja = await reservarHttp(otraFranja!, zonaId, fecha, "10:00");
+    const esperaOtraFranja = performance.now() - inicio;
+
+    let mismaFranjaTermino = false;
+    const enMismaFranja = reservarHttp(mismaFranja!, zonaId, fecha, "08:00").then((res) => {
+      mismaFranjaTermino = true;
+      return res;
+    });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const mismaFranjaEsperaba = !mismaFranjaTermino;
+
+    liberar();
+    await transaccionAbierta;
+    const resultadoMismaFranja = await enMismaFranja;
+
+    expect(enOtraFranja.status).toBe(201);
+    expect(esperaOtraFranja).toBeLessThan(500);
+    expect(mismaFranjaEsperaba).toBe(true);
+    expect(resultadoMismaFranja.status).toBe(201);
   });
 
   it("QA-3.1 CA-5 la prueba es determinista: 20 ejecuciones seguidas dan exactamente una reserva", async () => {
