@@ -21,6 +21,25 @@ pnpm db:ensure       # crea gr_booking_db en el contenedor si no existe
 pnpm migrate:latest  # aplica las migraciones
 ```
 
+### Modelo de datos
+
+| Tabla | Proposito |
+|---|---|
+| `zonas_comunes` | Zona reservable con horario, duracion de franja, aforo simultaneo y anticipaciones. Las franjas no se guardan una por una: se derivan de estos parametros. |
+| `franjas_ocupacion` | Contador por franja reservada (`zona_id`, `inicio`) con su aforo y ocupacion. `CHECK (ocupados >= 0 AND ocupados <= aforo)`. |
+| `reservas` | Reserva de un apartamento sobre una franja. Nunca se borra: cancelar es una transicion a `CANCELADA` con responsable, tipo y motivo. |
+| `bloqueos_mantenimiento` | Rango de fechas en que una zona no admite reservas, con eliminacion logica. |
+
+Invariantes declaradas en PostgreSQL (la ultima linea de defensa, valida para cualquier numero de replicas y para
+escrituras por fuera de la aplicacion):
+
+- `ex_reservas_exclusivas_sin_solapamiento`: restriccion de exclusion `EXCLUDE USING gist (zona_id WITH =,
+  tstzrange(inicio, fin) WITH &&)` sobre reservas confirmadas de zonas con aforo 1 (requiere `btree_gist`).
+- `ck_franjas_ocupados`: el contador de una franja nunca supera su aforo ni queda negativo.
+- `fk_reservas_franja`: toda reserva pertenece a una franja contabilizada.
+- Indices `idx_reservas_zona_rango` (consulta de solapamiento), `idx_reservas_apartamento_inicio` (reservas del
+  apartamento) e `idx_bloqueos_vigentes_rango` (GiST parcial sobre bloqueos vigentes).
+
 ## Autenticacion
 
 Igual que el gateway y el muro: el JWT viaja en la cookie `access_token` emitida por `gr-user-microservice` y se
