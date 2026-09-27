@@ -42,6 +42,16 @@ const config = {
   rabbitmq: {
     url: process.env.RABBITMQ_URL ?? "amqp://localhost:5672",
     eventsExchange: process.env.BOOKING_EVENTS_EXCHANGE ?? "gr.booking.events",
+    financeExchange: process.env.FINANCE_EVENTS_EXCHANGE ?? "gr.finance.events",
+    carteraQueue: process.env.CARTERA_QUEUE ?? "gr-booking.estado-cartera",
+  },
+  userService: {
+    url: process.env.USER_SERVICE_URL ?? "http://localhost:8080",
+    internalToken: required("INTERNAL_SERVICE_TOKEN"),
+    timeoutMs: Number(process.env.USER_SERVICE_TIMEOUT_MS ?? 3_000),
+  },
+  reservas: {
+    maxActivasPorApartamento: Number(process.env.MAX_RESERVAS_ACTIVAS_POR_APARTAMENTO ?? 2),
   },
   zonaHoraria: {
     offset: process.env.TIMEZONE_OFFSET ?? "-05:00",

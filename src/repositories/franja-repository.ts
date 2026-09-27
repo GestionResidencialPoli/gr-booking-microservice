@@ -16,6 +16,27 @@ class FranjaRepository {
     await trx(TABLE).where({ zona_id: zonaId }).andWhere("fin", ">", trx.fn.now()).update({ aforo });
   }
 
+  public static async asegurar(trx: Knex.Transaction, zonaId: number, inicio: Date, fin: Date, aforo: number): Promise<void> {
+    await trx(TABLE)
+      .insert({ zona_id: zonaId, inicio, fin, aforo, ocupados: 0 })
+      .onConflict(["zona_id", "inicio"])
+      .ignore();
+  }
+
+  public static async tomarCupo(trx: Knex.Transaction, zonaId: number, inicio: Date): Promise<FranjaOcupacionRow | undefined> {
+    const [row] = await trx<FranjaOcupacionRow>(TABLE)
+      .where("zona_id", zonaId)
+      .andWhere("inicio", inicio)
+      .andWhereRaw("ocupados < aforo")
+      .update({ ocupados: trx.raw("ocupados + 1") })
+      .returning("*");
+    return row;
+  }
+
+  public static async liberarCupo(trx: Knex.Transaction, zonaId: number, inicio: Date): Promise<void> {
+    await trx(TABLE).where({ zona_id: zonaId, inicio }).decrement("ocupados", 1);
+  }
+
   public static async findEnRango(zonaId: number, desde: Date, hasta: Date): Promise<FranjaOcupacionRow[]> {
     return knex<FranjaOcupacionRow>(TABLE)
       .where("zona_id", zonaId)
