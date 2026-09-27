@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import Session from "../lib/session";
+import DisponibilidadService from "../services/disponibilidad-service";
 import ZonaService from "../services/zona-service";
 import HttpStatus from "../types/enums/http-status";
 import ZonaValidator from "../validators/zona-validator";
@@ -20,6 +21,21 @@ class ZonaController {
     try {
       const zona = await ZonaService.obtener(ZonaValidator.id(req.params.id), Session.esAdministrador(req));
       BaseController.handleSuccess(res, { payload: zona });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async availability(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { desde, hasta } = ZonaValidator.disponibilidadQuery(req.query);
+      const disponibilidad = await DisponibilidadService.consultar({
+        zonaId: ZonaValidator.id(req.params.id),
+        desde,
+        hasta,
+        puedeVerInactivas: Session.esAdministrador(req),
+      });
+      BaseController.handleSuccess(res, { payload: disponibilidad });
     } catch (error) {
       next(error);
     }

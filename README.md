@@ -65,6 +65,12 @@ Todas las rutas viven bajo `/api/v1`, exigen sesion y, en mutaciones, CSRF. Resp
 | POST | `/zonas-comunes` | ADMINISTRACION | 422 `FRANJA_INCOMPLETA` si la duracion no cabe exacta: repetir con `confirmarFranjaIncompleta: true` |
 | PUT | `/zonas-comunes/{id}` | ADMINISTRACION | 409 si cambia el horario con reservas futuras o si el aforo queda por debajo de lo ya reservado |
 | PATCH | `/zonas-comunes/{id}/activacion` | ADMINISTRACION | `{ activa }`. Devuelve `{ zona, reservasFuturas }`: las reservas se conservan |
+| GET | `/zonas-comunes/{id}/disponibilidad?desde=&hasta=` | cualquiera | Fechas `YYYY-MM-DD`, por defecto hoy y 7 dias. Maximo 60 dias (422 `RANGO_DEMASIADO_AMPLIO`) |
+
+La disponibilidad devuelve `{ zonaId, desde, hasta, consultadaEn, dias: [{ fecha, franjas: [{ inicio, fin,
+horaInicio, horaFin, estado, aforo, cuposRestantes, motivoBloqueo }] }] }`, con `estado` en `DISPONIBLE`,
+`PARCIAL`, `COMPLETA`, `BLOQUEADA` o `FUERA_DE_ANTICIPACION`. Es **informativa**: la garantia la da la reserva
+(ver `docs/arquitectura/reservas.md`).
 
 Las horas de las zonas se interpretan en hora de Colombia (`TIMEZONE_OFFSET`) y las franjas se derivan de la
 apertura, el cierre y la duracion; si la duracion no cabe un numero entero de veces, la ultima franja termina al

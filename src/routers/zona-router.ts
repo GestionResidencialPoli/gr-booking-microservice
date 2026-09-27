@@ -8,6 +8,7 @@ function zonaRouter(): Router {
 
   router.get("/", ZonaController.list);
   router.get("/:id", ZonaController.getById);
+  router.get("/:id/disponibilidad", ZonaController.availability);
   router.post("/", requireAdmin, ZonaController.create);
   router.put("/:id", requireAdmin, ZonaController.update);
   router.patch("/:id/activacion", requireAdmin, ZonaController.changeActivation);

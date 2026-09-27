@@ -1,4 +1,5 @@
 import { z } from "zod";
+import Calendario from "../lib/calendario";
 
 const hora = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "La hora debe tener el formato HH:MM.");
 
@@ -28,6 +29,18 @@ export const listarZonasQuerySchema = z.object({
 
 export const idSchema = z.coerce.number().int().positive();
 
+const DIAS_POR_DEFECTO = 6;
+
+export const disponibilidadQuerySchema = z
+  .object({
+    desde: z.string().date("La fecha desde debe tener el formato YYYY-MM-DD.").optional(),
+    hasta: z.string().date("La fecha hasta debe tener el formato YYYY-MM-DD.").optional(),
+  })
+  .transform(({ desde, hasta }) => {
+    const inicio = desde ?? Calendario.fechaLocal(new Date());
+    return { desde: inicio, hasta: hasta ?? Calendario.sumarDias(inicio, DIAS_POR_DEFECTO) };
+  });
+
 class ZonaValidator {
   public static zona(input: unknown) {
     return zonaComunSchema.parse(input);
@@ -39,6 +52,10 @@ class ZonaValidator {
 
   public static listarQuery(input: unknown) {
     return listarZonasQuerySchema.parse(input);
+  }
+
+  public static disponibilidadQuery(input: unknown) {
+    return disponibilidadQuerySchema.parse(input);
   }
 
   public static id(input: unknown) {

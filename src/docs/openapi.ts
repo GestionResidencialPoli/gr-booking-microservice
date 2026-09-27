@@ -90,6 +90,22 @@ const openapi = {
         },
       },
     },
+    "/zonas-comunes/{id}/disponibilidad": {
+      get: {
+        summary: "Disponibilidad por franjas de una zona en un rango de fechas (informativa, no reserva nada)",
+        parameters: [
+          idParam,
+          { name: "desde", in: "query", schema: { type: "string", format: "date" } },
+          { name: "hasta", in: "query", schema: { type: "string", format: "date" } },
+        ],
+        responses: {
+          "200": { description: "{ zonaId, desde, hasta, consultadaEn, dias: [{ fecha, franjas }] }" },
+          "404": { description: "ZONA_NO_ENCONTRADA" },
+          "422": { description: "RANGO_INVALIDO o RANGO_DEMASIADO_AMPLIO (mas de 60 dias)" },
+          ...errorResponses,
+        },
+      },
+    },
     "/zonas-comunes/{id}/activacion": {
       patch: {
         summary: "Activar o desactivar una zona (solo ADMINISTRACION); devuelve las reservas futuras que se conservan",
