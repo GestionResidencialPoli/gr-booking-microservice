@@ -1,6 +1,15 @@
 import { z } from "zod";
 
-const fechaHoraLocal = z.string().regex(/^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d$/, "Debe tener el formato YYYY-MM-DDTHH:MM en hora local.");
+function esFechaReal(valor: string): boolean {
+  const [anio, mes, dia] = valor.slice(0, 10).split("-").map(Number) as [number, number, number];
+  const fecha = new Date(Date.UTC(anio, mes - 1, dia));
+  return fecha.getUTCFullYear() === anio && fecha.getUTCMonth() === mes - 1 && fecha.getUTCDate() === dia;
+}
+
+const fechaHoraLocal = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d$/, "Debe tener el formato YYYY-MM-DDTHH:MM en hora local.")
+  .refine(esFechaReal, "La fecha no existe en el calendario.");
 
 export const bloqueoSchema = z.object({
   inicio: fechaHoraLocal,
