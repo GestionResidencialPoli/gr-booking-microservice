@@ -1,5 +1,6 @@
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import config from "../config";
+import { decryptNestedJwt } from "./jwe";
 
 export type UserRole = "ADMINISTRACION" | "VIGILANTE" | "RESIDENTE";
 
@@ -21,8 +22,11 @@ function isAccessTokenClaims(payload: JwtPayload): payload is JwtPayload & Acces
 
 class TokenService {
   public static verifyAccessToken(token: string): AccessTokenClaims | null {
+    const signedToken = decryptNestedJwt(token, config.jwtEncryptionKey);
+    if (!signedToken) return null;
+
     try {
-      const payload = jwt.verify(token, config.jwtSecret, { algorithms: ["HS256"] });
+      const payload = jwt.verify(signedToken, config.jwtSecret, { algorithms: ["HS256"] });
 
       if (typeof payload === "string" || !isAccessTokenClaims(payload)) {
         return null;
