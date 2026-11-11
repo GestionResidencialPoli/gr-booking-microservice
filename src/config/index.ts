@@ -25,10 +25,26 @@ if (jwtSecret.length < 32) {
   );
 }
 
+function requiredEncryptionKey(name: string): Buffer {
+  const value = required(name);
+  const key = Buffer.from(value, "base64url");
+
+  if (key.length !== 32 || key.toString("base64url") !== value) {
+    throw new Error(
+      `${name} debe ser una clave de 32 bytes en base64url sin relleno (43 caracteres): debe coincidir con la del user-microservice`,
+    );
+  }
+
+  return key;
+}
+
+const jwtEncryptionKey = requiredEncryptionKey("JWT_ENCRYPTION_KEY");
+
 const config = {
   env: process.env.NODE_ENV ?? "development",
   port: Number(process.env.PORT ?? 4200),
   jwtSecret,
+  jwtEncryptionKey,
   accessTokenCookieName: process.env.ACCESS_TOKEN_COOKIE_NAME ?? "access_token",
   corsAllowedOrigins: list("CORS_ALLOWED_ORIGINS", "http://localhost:3000"),
   db: {
