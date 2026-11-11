@@ -43,7 +43,8 @@ escrituras por fuera de la aplicacion):
 ## Autenticacion
 
 Igual que el gateway y el muro: el JWT viaja en la cookie `access_token` emitida por `gr-user-microservice` y se
-verifica localmente con el mismo `JWT_SECRET`. Las mutaciones exigen ademas el encabezado `X-XSRF-TOKEN` con el
+verifica localmente: primero se descifra el JWE (`JWT_ENCRYPTION_KEY`, `dir` + `A256GCM`, en `src/lib/jwe.ts`) y
+luego se verifica la firma HS256 con el mismo `JWT_SECRET`. Un JWT firmado pero sin cifrar se rechaza. Las mutaciones exigen ademas el encabezado `X-XSRF-TOKEN` con el
 mismo valor de la cookie `XSRF-TOKEN` (doble envio, igual contrato que el user-microservice). Los errores tienen
 la forma `{ "error": { "code", "message", "details?" } }`.
 
@@ -117,6 +118,7 @@ cierre.
 |---|---|---|
 | `PORT` | Puerto HTTP | `4200` |
 | `JWT_SECRET` | Secreto HMAC compartido con gr-user-microservice (obligatorio, minimo 32 caracteres) | — |
+| `JWT_ENCRYPTION_KEY` | Clave AES-256 compartida con gr-user-microservice para descifrar el access token (obligatoria, 32 bytes en base64url) | — |
 | `ACCESS_TOKEN_COOKIE_NAME` | Cookie del access token | `access_token` |
 | `CORS_ALLOWED_ORIGINS` | Origenes permitidos, separados por coma | `http://localhost:3000` |
 | `DB_HOST` / `DB_PORT` | Servidor PostgreSQL | `localhost` / `5432` |
