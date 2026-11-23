@@ -112,7 +112,7 @@ jobs:
             -e JWT_SECRET="$CI_JWT_SECRET" \
             -e JWT_ENCRYPTION_KEY="$JWT_ENCRYPTION_KEY" \
             -e INTERNAL_SERVICE_TOKEN="$CI_INTERNAL_SERVICE_TOKEN" \
-            -e USER_SERVICE_URL=http://localhost:8080 \
+            -e COMMUNICATIONS_WS_URL=ws://localhost:4600/internal/ws \
             gr-booking-microservice:ci
 
           for i in $(seq 1 15); do
