@@ -1,5 +1,5 @@
-import config from "../config";
 import HttpStatus from "../types/enums/http-status";
+import CommunicationsClient, { CommunicationsError } from "./communications-client";
 import DomainError from "./domain-error";
 import Logger from "./logger";
 
@@ -34,31 +34,26 @@ function directorioNoDisponible(): DomainError {
 
 class UserServiceClient {
   public static async residente(userId: number): Promise<Residente> {
-    let response: Response;
-    try {
-      response = await fetch(`${config.userService.url}/api/v1/internal/users/${userId}`, {
-        headers: { "X-Internal-Token": config.userService.internalToken },
-        signal: AbortSignal.timeout(config.userService.timeoutMs),
-      });
-    } catch (error) {
-      Logger.warn("gr-user-microservice no respondio", { error: (error as Error).message, userId });
-      throw directorioNoDisponible();
-    }
-
-    if (response.status === HttpStatus.NotFound) {
-      throw new DomainError(HttpStatus.UnprocessableEntity, "RESIDENTE_DESCONOCIDO", "El usuario de la sesion no existe.");
-    }
-    if (!response.ok) {
-      Logger.warn("gr-user-microservice respondio con error", { status: response.status, userId });
-      throw directorioNoDisponible();
-    }
-
-    const user = (await response.json()) as InternalUserResponse;
+    const user = await this.consultar(userId);
     return {
       userId: user.id,
       nombre: `${user.firstName} ${user.lastName}`.trim(),
       apartamento: user.apartment ?? null,
     };
+  }
+
+  private static async consultar(userId: number): Promise<InternalUserResponse> {
+    try {
+      return await CommunicationsClient.request<InternalUserResponse>("user-microservice", "users.get", { id: userId });
+    } catch (error) {
+      if (!(error instanceof CommunicationsError)) throw error;
+      if (error.code === "NO_ENCONTRADO") {
+        throw new DomainError(HttpStatus.UnprocessableEntity, "RESIDENTE_DESCONOCIDO", "El usuario de la sesion no existe.");
+      }
+
+      Logger.warn("gr-user-microservice no respondio por el hub", { code: error.code, error: error.message, userId });
+      throw directorioNoDisponible();
+    }
   }
 }
 
