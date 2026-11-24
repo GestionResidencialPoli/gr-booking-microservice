@@ -16,7 +16,7 @@ export default defineConfig({
       JWT_ENCRYPTION_KEY: "Y2xhdmUtZGUtcHJ1ZWJhcy1kZS0zMi1ieXRlcy1vayE",
       INTERNAL_SERVICE_TOKEN: "test-internal-service-token-de-32-caracteres",
       RABBITMQ_URL: "amqp://127.0.0.1:1",
-      USER_SERVICE_URL: "http://127.0.0.1:47123",
+      COMMUNICATIONS_WS_URL: "ws://127.0.0.1:47123/internal/ws",
       RATE_LIMIT_MAX: "100000",
       DB_POOL_MAX: "20",
     },

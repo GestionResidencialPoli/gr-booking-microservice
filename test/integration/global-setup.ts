@@ -1,11 +1,11 @@
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import Knex from "knex";
-import type http from "node:http";
 import path from "node:path";
+import type { WebSocketServer } from "ws";
 import { iniciarUserServiceStub } from "./support/user-service-stub";
 
 let container: StartedPostgreSqlContainer | undefined;
-let userServiceStub: http.Server | undefined;
+let userServiceStub: WebSocketServer | undefined;
 
 export default async function setup(): Promise<() => Promise<void>> {
   container = await new PostgreSqlContainer("postgres:16-alpine")
@@ -31,6 +31,7 @@ export default async function setup(): Promise<() => Promise<void>> {
   userServiceStub = await iniciarUserServiceStub(process.env.INTERNAL_SERVICE_TOKEN ?? "test-internal-service-token-de-32-caracteres");
 
   return async () => {
+    userServiceStub?.clients.forEach((client) => client.terminate());
     userServiceStub?.close();
     await container?.stop();
   };
