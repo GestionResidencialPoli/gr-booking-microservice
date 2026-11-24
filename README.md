@@ -129,9 +129,10 @@ cierre.
 | `BOOKING_EVENTS_EXCHANGE` | Exchange de eventos del servicio | `gr.booking.events` |
 | `FINANCE_EVENTS_EXCHANGE` | Exchange del modulo financiero del que se replica el paz y salvo | `gr.finance.events` |
 | `CARTERA_QUEUE` | Cola durable (compartida entre replicas) que consume el estado de cartera | `gr-booking.estado-cartera` |
-| `USER_SERVICE_URL` | gr-user-microservice, para resolver el apartamento del residente | `http://localhost:8080` |
+| `COMMUNICATIONS_WS_URL` | Hub WebSocket por el que se consulta gr-user-microservice | `ws://localhost:4600/internal/ws` |
 | `INTERNAL_SERVICE_TOKEN` | Token servicio a servicio (obligatorio, mismo valor que en gr-user-microservice) | — |
-| `USER_SERVICE_TIMEOUT_MS` | Tiempo maximo de la consulta al user-microservice | `3000` |
+| `COMMUNICATIONS_TIMEOUT_MS` | Tiempo maximo de cada consulta por el hub | `3000` |
+| `COMMUNICATIONS_SILENCE_LIMIT_MS` | Silencio tras el que se descarta la conexion con el hub | `60000` |
 | `MAX_RESERVAS_ACTIVAS_POR_APARTAMENTO` | Reservas futuras confirmadas permitidas por apartamento | `2` |
 | `TIMEZONE_OFFSET` | Desfase de la hora local de la copropiedad (Colombia no tiene horario de verano) | `-05:00` |
 | `RATE_LIMIT_WINDOW_MS` / `RATE_LIMIT_MAX` | Limite de solicitudes por IP | `60000` / `300` |

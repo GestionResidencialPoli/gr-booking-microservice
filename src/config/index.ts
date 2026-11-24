@@ -61,10 +61,11 @@ const config = {
     financeExchange: process.env.FINANCE_EVENTS_EXCHANGE ?? "gr.finance.events",
     carteraQueue: process.env.CARTERA_QUEUE ?? "gr-booking.estado-cartera",
   },
-  userService: {
-    url: process.env.USER_SERVICE_URL ?? "http://localhost:8080",
+  communications: {
+    url: process.env.COMMUNICATIONS_WS_URL ?? "ws://localhost:4600/internal/ws",
     internalToken: required("INTERNAL_SERVICE_TOKEN"),
-    timeoutMs: Number(process.env.USER_SERVICE_TIMEOUT_MS ?? 3_000),
+    timeoutMs: Number(process.env.COMMUNICATIONS_TIMEOUT_MS ?? 3_000),
+    silenceLimitMs: Number(process.env.COMMUNICATIONS_SILENCE_LIMIT_MS ?? 60_000),
   },
   reservas: {
     maxActivasPorApartamento: Number(process.env.MAX_RESERVAS_ACTIVAS_POR_APARTAMENTO ?? 2),

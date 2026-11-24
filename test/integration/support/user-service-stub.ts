@@ -1,4 +1,5 @@
-import http from "node:http";
+import type { IncomingMessage } from "node:http";
+import { WebSocketServer } from "ws";
 
 export const STUB_PORT = 47123;
 export const UID_SIN_APARTAMENTO = 99;
@@ -29,30 +30,42 @@ function apartamento(torre: string, numero: string) {
   return { id: Number(numero) || 1, torre, numero, activo: numero !== "999" };
 }
 
-function responder(res: http.ServerResponse, status: number, body?: unknown) {
-  res.writeHead(status, { "Content-Type": "application/json" });
-  res.end(body === undefined ? undefined : JSON.stringify(body));
+interface PeticionHub {
+  id: string;
+  action: string;
+  payload: { id?: number; torre?: string; numero?: string };
 }
 
-export function iniciarUserServiceStub(token: string): Promise<http.Server> {
-  const server = http.createServer((req, res) => {
-    if (req.headers["x-internal-token"] !== token) return responder(res, 401);
+function atender({ action, payload }: PeticionHub) {
+  if (action === "users.get") {
+    const uid = Number(payload.id);
+    return uid === UID_INEXISTENTE ? null : usuario(uid);
+  }
+  if (action === "apartments.find") return apartamento(payload.torre ?? "", payload.numero ?? "");
+  return null;
+}
 
-    const url = new URL(req.url ?? "/", `http://127.0.0.1:${STUB_PORT}`);
-    const usuarioMatch = url.pathname.match(/^\/api\/v1\/internal\/users\/(\d+)$/);
-
-    if (usuarioMatch) {
-      const uid = Number(usuarioMatch[1]);
-      return uid === UID_INEXISTENTE ? responder(res, 404) : responder(res, 200, usuario(uid));
-    }
-
-    if (url.pathname === "/api/v1/internal/apartments") {
-      const encontrado = apartamento(url.searchParams.get("torre") ?? "", url.searchParams.get("numero") ?? "");
-      return encontrado ? responder(res, 200, encontrado) : responder(res, 404);
-    }
-
-    return responder(res, 404);
+export function iniciarUserServiceStub(token: string): Promise<WebSocketServer> {
+  const server = new WebSocketServer({
+    port: STUB_PORT,
+    host: "127.0.0.1",
+    path: "/internal/ws",
+    verifyClient: ({ req }: { req: IncomingMessage }) => req.headers["x-internal-token"] === token,
   });
 
-  return new Promise((resolve) => server.listen(STUB_PORT, "127.0.0.1", () => resolve(server)));
+  server.on("connection", (socket) => {
+    socket.on("message", (data) => {
+      const peticion = JSON.parse(data.toString()) as PeticionHub;
+      const encontrado = atender(peticion);
+      socket.send(
+        JSON.stringify(
+          encontrado
+            ? { type: "response", id: peticion.id, ok: true, payload: encontrado }
+            : { type: "response", id: peticion.id, ok: false, error: { code: "NO_ENCONTRADO", message: "No existe." } },
+        ),
+      );
+    });
+  });
+
+  return new Promise((resolve) => server.once("listening", () => resolve(server)));
 }
